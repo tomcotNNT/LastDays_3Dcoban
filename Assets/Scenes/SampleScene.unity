@@ -223,7 +223,6 @@ GameObject:
   m_Component:
   - component: {fileID: 13248431}
   - component: {fileID: 13248433}
-  - component: {fileID: 13248432}
   m_Layer: 3
   m_Name: KickCollider
   m_TagString: Untagged
@@ -246,19 +245,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 480054281}
   m_LocalEulerAnglesHint: {x: 19.031, y: 9.636, z: 6.954}
---- !u!114 &13248432
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 13248430}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1f684f60048e5b4cbaa5e8426a6274a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerAttr: {fileID: 1164328342}
 --- !u!65 &13248433
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1603,19 +1589,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.46494544, y: 1.268915, z: 0.21030392}
   m_Center: {x: -0.00004212966, y: 0.37407854, z: 0.0000012760121}
---- !u!114 &373178593
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 373178587}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1f684f60048e5b4cbaa5e8426a6274a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerAttr: {fileID: 1164328342}
 --- !u!1 &382965134
 GameObject:
   m_ObjectHideFlags: 0
@@ -2399,9 +2372,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4184770148864136449, guid: aac5a422caf682d45bb63a88e5b01e00, type: 3}
       insertIndex: -1
       addedObject: {fileID: 373178590}
-    - targetCorrespondingSourceObject: {fileID: 4184770148864136449, guid: aac5a422caf682d45bb63a88e5b01e00, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 373178593}
   m_SourcePrefab: {fileID: 100100000, guid: aac5a422caf682d45bb63a88e5b01e00, type: 3}
 --- !u!1 &480054280
 GameObject:
@@ -6134,6 +6104,7 @@ GameObject:
   - component: {fileID: 1164328340}
   - component: {fileID: 1164328341}
   - component: {fileID: 1164328342}
+  - component: {fileID: 1164328343}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -6208,6 +6179,8 @@ MonoBehaviour:
   jumpInput: 32
   strafeInput: 9
   sprintInput: 304
+  attack3Input: 101
+  ultimateInput: 114
   rotateCameraXInput: Mouse X
   rotateCameraYInput: Mouse Y
   cc: {fileID: 0}
@@ -6364,6 +6337,21 @@ MonoBehaviour:
   maxEnergy: 100
   currentEnergy: 0
   canUseUltimate: 0
+--- !u!114 &1164328343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1164328332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1f684f60048e5b4cbaa5e8426a6274a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerAttr: {fileID: 1164328342}
+  hammerCollider: {fileID: 373178590}
+  footCollider: {fileID: 13248433}
 --- !u!1 &1180563952
 GameObject:
   m_ObjectHideFlags: 0
