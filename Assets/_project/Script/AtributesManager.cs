@@ -62,4 +62,5 @@ public class AttributesManager : MonoBehaviour
 
         atm.TakeDamage(finalDamage);
     }
+    
 }
