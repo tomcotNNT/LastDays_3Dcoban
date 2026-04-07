@@ -18,19 +18,32 @@ public class PlayerAttributes : MonoBehaviour
 
     void Awake()
     {
+        // Cố gắng tìm AttributesManager
         stats = GetComponent<AttributesManager>();
+
+        // Nếu vẫn không thấy, báo lỗi rõ ràng để bạn đi kiểm tra Inspector
+        if (stats == null)
+        {
+            Debug.LogError("LỖI: Quên chưa gắn script AttributesManager vào Player rồi bạn ơi!");
+        }
     }
 
     void OnEnable()
     {
-        // Đăng ký lắng nghe sự kiện máu thay đổi từ AttributesManager
-        stats.OnHealthChanged += UpdateHealthUI;
+        // Chỉ đăng ký nếu stats không bị null
+        if (stats != null)
+        {
+            stats.OnHealthChanged += UpdateHealthUI;
+        }
     }
 
     void OnDisable()
     {
-        // Hủy đăng ký để tránh lỗi bộ nhớ
-        stats.OnHealthChanged -= UpdateHealthUI;
+        // Kiểm tra NULL trước khi hủy đăng ký (Đây là dòng 33 của bạn)
+        if (stats != null)
+        {
+            stats.OnHealthChanged -= UpdateHealthUI;
+        }
     }
 
     void Start()
@@ -43,14 +56,14 @@ public class PlayerAttributes : MonoBehaviour
             healthSlider.maxValue = stats.maxHealth;
             healthSlider.value = stats.maxHealth;
         }
-        
+
         UpdateEnergyUI();
     }
 
     // TỐI ƯU: Xóa bỏ Update() liên tục, chỉ cập nhật khi cần
     void UpdateHealthUI(int currentHP, int maxHP)
     {
-        if (healthSlider != null) 
+        if (healthSlider != null)
         {
             healthSlider.maxValue = maxHP;
             healthSlider.value = currentHP;
