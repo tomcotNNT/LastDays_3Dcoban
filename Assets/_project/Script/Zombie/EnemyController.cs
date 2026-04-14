@@ -1,83 +1,84 @@
+
 using UnityEngine;
+using UnityEngine.AI;
+
 
 public class EnemyController : MonoBehaviour
 {
-    [Header("Stats")]
-    public float walkSpeed = 1.5f; // Tốc độ chậm để Player dễ thở
-    public float chaseRange = 10f; // Khoảng cách nhận diện Player
-    public float stopDistance = 1.5f; // Dừng lại để cào cấu
-    public float gravity = -20f;
+    NavMeshAgent agent;        // Điều khiển di chuyển enemy trên NavMesh
+    Animator animator;         // Điều khiển animation (Idle / Walk)
 
-    [Header("Components")]
-    private CharacterController controller;
-    private Animator anim;
-    private Transform player;
 
-    private float yVelocity;
-    private float stateTimer;
-    private bool isChasing;
+    public Transform[] waypoints;     // Danh sách các waypoint để tuần tra
+    int currentIndex;          // Chỉ số waypoint hiện tại
 
-   void Start()
-{
-    controller = GetComponent<CharacterController>();
-    // Vì Animator nằm ở con (T-pose), phải dùng GetComponentInChildren
-    anim = GetComponentInChildren<Animator>(); 
-    player = GameObject.FindGameObjectWithTag("Player").transform;
-    yVelocity = -1f;
-}
+
+    public float walkSpeed = 2f;   // Tốc độ đi bộ khi tuần tra
+
+
+    void Start()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        // Lấy NavMeshAgent gắn trên Enemy (object cha)
+
+
+        animator = GetComponentInChildren<Animator>();
+        // Lấy Animator nằm trong EnemyTPose (object con)
+
+
+        GameObject wpParent = GameObject.FindGameObjectWithTag("WayPoints");
+        // Tìm object WayPoints bằng Tag
+
+
+        waypoints = new Transform[wpParent.transform.childCount];
+        // Tạo mảng waypoint với số lượng = số object con trong WayPoints
+
+
+        for (int i = 0; i < waypoints.Length; i++)
+        {
+            waypoints[i] = wpParent.transform.GetChild(i);
+            // Lưu từng waypoint con vào mảng
+        }
+
+
+        currentIndex = Random.Range(0, waypoints.Length);
+        // Chọn ngẫu nhiên 1 waypoint ban đầu
+
+
+        agent.speed = walkSpeed;
+        // Đặt tốc độ đi bộ cho enemy
+
+
+        agent.SetDestination(waypoints[currentIndex].position);
+        // Ra lệnh cho enemy bắt đầu đi tới waypoint
+    }
+
 
     void Update()
     {
-        HandleGravity();
+        // ===== ĐIỀU KHIỂN ANIMATION =====
+        float speed = agent.velocity.magnitude;
+        // Lấy vận tốc hiện tại của NavMeshAgent
 
-        float distance = Vector3.Distance(transform.position, player.position);
 
-        // LOGIC: Nếu ở gần và đang trong trạng thái Patrolling (đi bộ)
-        if (distance < chaseRange && anim.GetBool("isPatrolling"))
+        animator.SetBool("isPatrolling", speed > 0.1f);
+        // Nếu enemy đang di chuyển → Walk
+        // Nếu đứng yên → Idle
+
+
+        // ===== ĐIỀU KHIỂN DI CHUYỂN =====
+        if (!agent.pathPending && agent.remainingDistance < 0.5f)
         {
-            ChasePlayer();
-        }
-        else
-        {
-            // Nếu không đuổi, vận tốc ngang bằng 0
-            anim.SetFloat("Speed", 0);
-        }
-    }
+            // Khi enemy đã tới gần waypoint
 
-    void HandleGravity()
-    {
-        if (controller.isGrounded && yVelocity < 0)
-            yVelocity = -2f;
-        else
-            yVelocity += gravity * Time.deltaTime;
 
-        controller.Move(Vector3.up * yVelocity * Time.deltaTime);
-    }
+            currentIndex = Random.Range(0, waypoints.Length);
+            // Chọn waypoint mới ngẫu nhiên
 
-    void ChasePlayer()
-    {
-        // 1. Tính hướng về phía Player
-        Vector3 direction = (player.position - transform.position).normalized;
-        direction.y = 0; // Zombie không bay lên trời
 
-        // 2. Xoay Zombie nhìn về phía Player mượt mà
-        if (direction != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
-        }
-
-        // 3. Di chuyển thực tế (Sửa lỗi chạy tại chỗ)
-        float distance = Vector3.Distance(transform.position, player.position);
-        if (distance > stopDistance)
-        {
-            controller.Move(direction * walkSpeed * Time.deltaTime);
-            anim.SetFloat("Speed", 1); // Kích hoạt animation Walk
-        }
-        else
-        {
-            anim.SetFloat("Speed", 0);
-            // Có thể thêm anim.SetTrigger("Attack") ở đây sau này
+            agent.SetDestination(waypoints[currentIndex].position);
+            // Đi tiếp tới waypoint mới
         }
     }
 }
+

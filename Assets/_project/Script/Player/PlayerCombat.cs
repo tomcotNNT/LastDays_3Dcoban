@@ -61,25 +61,35 @@ public class PlayerCombat : MonoBehaviour
     }
 
     // Xử lý khi Collider chạm vào Zombie
+    // Xử lý khi Collider chạm vào Zombie
     private void OnTriggerEnter(Collider other)
     {
+        // 1. Kiểm tra Tag (Nhớ đặt Tag của Zombie là "Enemy")
         if (other.CompareTag("Enemy"))
         {
-            // Tránh việc 1 lần vung búa chạm 1 mục tiêu nhiều lần (trừ Attack 3 là combo nhiều nhịp)
+            // Tránh việc 1 lần vung búa chạm 1 mục tiêu nhiều lần
             if (hasHitInThisSwing && currentAttackType != 3) return;
 
             float damage = CalculateDamage();
-            var zombieHealth = other.GetComponent<ZombieHealth>();
 
-            if (zombieHealth != null)
+            // 2. FIX QUAN TRỌNG: Đổi ZombieHealth thành AttributesManager (Vì bạn dùng file đó)
+            // Dùng GetComponentInParent để phòng trường hợp búa chạm vào tay/chân zombie
+            var stats = other.GetComponentInParent<AttributesManager>();
+
+            if (stats != null)
             {
-                zombieHealth.TakeDamage(damage);
+                // 3. Gọi hàm TakeDamage (Lưu ý: Bạn dùng int, nên mình ép kiểu (int) damage)
+                stats.TakeDamage((int)damage);
                 
                 // Đánh trúng: +20 Nội năng
                 playerAttr.ChangeEnergy(20f);
                 hasHitInThisSwing = true; 
 
-                Debug.Log($"<color=green>Trúng đích!</color> Gây {damage} sát thương lên {other.name}");
+                Debug.Log($"<color=green>Trúng đích!</color> Gây {(int)damage} sát thương lên {other.name}");
+            }
+            else 
+            {
+                Debug.LogWarning("Chạm trúng Enemy nhưng không tìm thấy AttributesManager!");
             }
         }
     }

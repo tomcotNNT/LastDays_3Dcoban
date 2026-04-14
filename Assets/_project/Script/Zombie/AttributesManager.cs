@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using UnityEngine.AI; // Thêm để dùng NavMeshAgent trực tiếp
 
 public class AttributesManager : MonoBehaviour
 {
     [Header("UI & Setup")]
-    public Slider healthSlider; // Dành cho Zombie (Player dùng script riêng nên có thể để trống ô này trên Player)
+    public Slider healthSlider;
     public bool isElite = false;
 
     [Header("Chỉ số cơ bản")]
@@ -13,7 +14,6 @@ public class AttributesManager : MonoBehaviour
     public int maxHealth = 100;
     [SerializeField] private int currentHealth;
 
-    // Thuộc tính để PlayerAttributes hoặc SimpleZombieAI truy cập
     public int Health => currentHealth;
 
     [Header("Chiến đấu")]
@@ -22,44 +22,48 @@ public class AttributesManager : MonoBehaviour
     public float critDamage = 1.5f;
     [Range(0f, 1f)] public float critChance = 0.2f;
 
-    // SỰ KIỆN QUAN TRỌNG: Để PlayerAttributes lắng nghe và cập nhật thanh máu
     public event Action<int, int> OnHealthChanged;
     public event Action OnDeath;
 
     private void Awake()
     {
-        // Nếu là Zombie thì mới tự set máu theo loại, nếu là Player thì giữ nguyên maxHealth bạn chỉnh
-        if (gameObject.tag != "Player")
+        // Thiết lập máu dựa trên loại Enemy
+        if (!CompareTag("Player")) // Dùng CompareTag sẽ hiệu quả hơn kiểm tra chuỗi trực tiếp
         {
             maxHealth = isElite ? 600 : 400;
         }
-        
         currentHealth = maxHealth;
     }
 
     private void Start()
     {
-        // Thông báo cho UI lần đầu tiên
+        UpdateUI();
+    }
+
+    private void UpdateUI()
+    {
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        if (healthSlider != null)
+        {
+            healthSlider.maxValue = maxHealth;
+            healthSlider.value = currentHealth;
+        }
     }
 
     public void TakeDamage(int amount)
     {
         if (currentHealth <= 0) return;
 
+        // Tính toán giáp
         float reduction = amount * (armor / 100f);
         int finalDamage = Mathf.Max(1, Mathf.RoundToInt(amount - reduction));
 
         currentHealth -= finalDamage;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        // Kích hoạt sự kiện để PlayerAttributes.cs tự động nhảy thanh máu
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        UpdateUI(); // Gọi hàm dùng chung để cập nhật cả Event và Slider
 
-        // Nếu là Zombie thì tự cập nhật Slider trên đầu nó
-        if (healthSlider != null) healthSlider.value = currentHealth;
-
-        Debug.Log($"<color=red>{characterName}</color> nhận {finalDamage} sát thương. Còn {currentHealth} HP");
+        Debug.Log($"<color=red>{characterName}</color> nhận {finalDamage} HP sát thương. Còn {currentHealth} HP");
 
         if (currentHealth <= 0) Die();
     }
@@ -67,8 +71,8 @@ public class AttributesManager : MonoBehaviour
     public void DealDamage(GameObject target)
     {
         if (target == null) return;
-        AttributesManager targetStats = target.GetComponent<AttributesManager>();
-        
+        var targetStats = target.GetComponent<AttributesManager>();
+
         if (targetStats != null)
         {
             float totalDamage = attack;
@@ -80,13 +84,25 @@ public class AttributesManager : MonoBehaviour
     private void Die()
     {
         OnDeath?.Invoke();
-        Animator anim = GetComponentInChildren<Animator>();
+
+        // Ưu tiên tìm Animator ở chính nó trước, sau đó mới tìm ở con
+        Animator anim = GetComponent<Animator>();
+        if (anim == null) anim = GetComponentInChildren<Animator>();
+        
         if (anim != null) anim.SetTrigger("Death");
 
-        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (agent != null) agent.isStopped = true;
+        // Dừng di chuyển
+        if (TryGetComponent<NavMeshAgent>(out NavMeshAgent agent))
+        {
+            agent.isStopped = true;
+            agent.enabled = false; // Tắt luôn agent để các zombie khác không bị vướng
+        }
 
         Debug.Log($"{characterName} đã gục ngã!");
+        
+        // Tắt các va chạm để xác không cản đường người chơi
+        if (TryGetComponent<Collider>(out Collider col)) col.enabled = false;
+
         Destroy(gameObject, 3f);
     }
 }
